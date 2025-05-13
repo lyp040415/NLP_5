@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>疲劳裂纹扩展公式查询系统</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1.5rem 0;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 2.2rem;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-top: 0.5rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .search-section {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 10px;
+        }
+        
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        button {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .main-content {
+            display: flex;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background-color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .formula-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .formula-list li {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .formula-list li:hover {
+            background-color: #f0f7ff;
+        }
+        
+        .formula-list li.active {
+            background-color: #e3f2fd;
+            border-left: 4px solid var(--secondary-color);
+            font-weight: bold;
+        }
+        
+        .content-area {
+            flex: 1;
+            background-color: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .formula-card {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .formula-title {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .formula-math {
+            background-color: #f9f9f9;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+        
+        .formula-details {
+            margin-top: 1.5rem;
+        }
+        
+        .formula-detail-row {
+            display: flex;
+            margin-bottom: 1rem;
+        }
+        
+        .detail-label {
+            width: 120px;
+            font-weight: bold;
+            color: var(--dark-color);
+        }
+        
+        .detail-value {
+            flex: 1;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 1.5rem;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            border-bottom-color: var(--secondary-color);
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .reference {
+            background-color: #f9f9f9;
+            padding: 1rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+        
+        .parameter-explanation {
+            margin-top: 1.5rem;
+        }
+        
+        .parameter-row {
+            display: flex;
+            margin-bottom: 0.5rem;
+        }
+        
+        .parameter-symbol {
+            width: 50px;
+            font-weight: bold;
+            font-style: italic;
+        }
+        
+        .parameter-meaning {
+            flex: 1;
+        }
+        
+        .figure {
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+        
+        .figure img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .figure-caption {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+        
+        footer {
+            background-color: var(--dark-color);
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                margin-bottom: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>疲劳裂纹扩展公式查询系统</h1>
+        <p class="subtitle">为材料科学与工程领域的研究人员提供权威参考</p>
+    </header>
+    
+    <div class="container">
+        <div class="search-section">
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="输入关键词、公式名称或作者..." />
+                <button id="search-button">搜索</button>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="sidebar">
+                <h3>常用公式</h3>
+                <ul class="formula-list">
+                    <li class="active" data-formula="paris">Paris公式</li>
+                    <li data-formula="walker">Walker公式</li>
+                    <li data-formula="forman">Forman公式</li>
+                    <li data-formula="mcevily">McEvily公式</li>
+                    <li data-formula="erdogan">Erdogan公式</li>
+                    <li data-formula="elber">Elber公式</li>
+                    <li data-formula="newman">Newman公式</li>
+                    <li data-formula="weertman">Weertman公式</li>
+                    <li data-formula="wheeler">Wheeler模型</li>
+                </ul>
+            </div>
+            
+            <div class="content-area">
+                <div id="paris-formula" class="formula-card">
+                    <h2 class="formula-title">Paris公式 (Paris-Erdogan方程)</h2>
+                    
+                    <div class="tabs">
+                        <div class="tab active" data-tab="basics">基本公式</div>
+                        <div class="tab" data-tab="principles">原理介绍</div>
+                        <div class="tab" data-tab="author">提出者信息</div>
+                        <div class="tab" data-tab="applications">应用范围</div>
+                    </div>
+                    
+                    <div id="basics" class="tab-content active">
+                        <div class="formula-math">
+                            <p>\[ \frac{da}{dN} = C (\Delta K)^m \]</p>
+                        </div>
+                        
+                        <div class="parameter-explanation">
+                            <h4>参数解释:</h4>
+                            <div class="parameter-row">
+                                <div class="parameter-symbol">a</div>
+                                <div class="parameter-meaning">裂纹长度</div>
+                            </div>
+                            <div class="parameter-row">
+                                <div class="parameter-symbol">N</div>
+                                <div class="parameter-meaning">循环载荷次数</div>
+                            </div>
+                            <div class="parameter-row">
+                                <div class="parameter-symbol">da/dN</div>
+                                <div class="parameter-meaning">裂纹扩展速率</div>
+                            </div>
+                            <div class="parameter-row">
+                                <div class="parameter-symbol">C</div>
+                                <div class="parameter-meaning">材料常数</div>
+                            </div>
+                            <div class="parameter-row">
+                                <div class="parameter-symbol">m</div>
+                                <div class="parameter-meaning">材料常数(通常在2-4之间)</div>
+                            </div>
+                            <div class="parameter-row">
+                                <div class="parameter-symbol">ΔK</div>
+                                <div class="parameter-meaning">应力强度因子幅值 ΔK = Kmax - Kmin</div>
+                            </div>
+                        </div>
+                        
+                        <div class="reference">
+                            <p>参考文献: Paris, P. C., & Erdogan, F. (1963). A critical analysis of crack propagation laws. Journal of Basic Engineering, 85(4), 528-533.</p>
+                        </div>
+                    </div>
+                    
+                    <div id="principles" class="tab-content">
+                        <h3>Paris公式原理</h3>
+                        <p>Paris公式是疲劳裂纹扩展领域的基础方程，基于线性弹性断裂力学原理。该公式描述了裂纹扩展速率与应力强度因子幅值之间的幂函数关系。</p>
+                        
+                        <p>Paris公式的核心思想是将疲劳裂纹扩展速率与循环载荷下的应力强度因子幅值相关联。在双对数坐标系下，Paris公式表示为一条直线，其斜率为m，截距与材料常数C相关。</p>
+                        
+                        <div class="figure">
+                            <img src="/api/placeholder/600/400" alt="Paris公式的双对数曲线示意图">
+                            <div class="figure-caption">图1: 典型的Paris曲线(双对数坐标系下的da/dN-ΔK关系)</div>
+                        </div>
+                        
+                        <p>需要注意的是，Paris公式主要适用于疲劳裂纹扩展的第二阶段(稳定扩展阶段)，在近门槛值区域(第一阶段)和快速扩展区域(第三阶段)的精度有限。</p>
+                        
+                        <p>Paris方程的理论基础是:</p>
+                        <ul>
+                            <li>裂纹尖端的应力场由应力强度因子K唯一确定</li>
+                            <li>循环载荷下裂纹的扩展速率受到应力强度因子幅值ΔK的控制</li>
+                            <li>材料的疲劳裂纹扩展行为可以通过实验确定的材料常数C和m来表征</li>
+                        </ul>
+                    </div>
+                    
+                    <div id="author" class="tab-content">
+                        <h3>提出者信息</h3>
+                        <div class="formula-details">
+                            <div class="formula-detail-row">
+                                <div class="detail-label">提出者:</div>
+                                <div class="detail-value">Paul C. Paris & Fazil Erdogan</div>
+                            </div>
+                            <div class="formula-detail-row">
+                                <div class="detail-label">提出年份:</div>
+                                <div class="detail-value">1963年</div>
+                            </div>
+                            <div class="formula-detail-row">
+                                <div class="detail-label">研究机构:</div>
+                                <div class="detail-value">Lehigh University</div>
+                            </div>
+                        </div>
+                        
+                        <h4>Paul C. Paris简介</h4>
+                        <p>Paul C. Paris (1930-2017)是断裂力学领域的先驱，他在1957年首次提出了将应力强度因子概念应用于疲劳裂纹扩展的思想。1963年，他与Fazil Erdogan共同发表了经典论文，正式提出了后来被称为"Paris公式"的疲劳裂纹扩展率方程。</p>
+                        
+                        <p>Paris在西北大学获得博士学位，曾在波音公司、Lehigh大学和Washington大学工作，在断裂力学和疲劳领域做出了开创性贡献。他的研究为航空航天、核能和其他工程领域的安全性评估提供了理论基础。</p>
+                        
+                        <h4>Fazil Erdogan简介</h4>
+                        <p>Fazil Erdogan是土耳其裔美国工程师，与Paul Paris共同发展了疲劳裂纹扩展理论。他在Lehigh大学机械工程和力学系工作多年，在断裂力学、接触力学和复合材料力学方面做出了重要贡献。</p>
+                    </div>
+                    
+                    <div id="applications" class="tab-content">
+                        <h3>应用范围</h3>
+                        <p>Paris公式在多个工程领域具有广泛应用:</p>
+                        <ul>
+                            <li><strong>航空航天工程:</strong> 用于飞机结构、发动机部件的疲劳寿命预测</li>
+                            <li><strong>核能工程:</strong> 反应堆压力容器和管道的安全性评估</li>
+                            <li><strong>机械工程:</strong> 轴、齿轮等机械零部件的疲劳分析</li>
+                            <li><strong>土木工程:</strong> 桥梁、钢结构的疲劳寿命评估</li>
+                            <li><strong>石油与天然气工业:</strong> 海上平台、管道系统的完整性评估</li>
+                        </ul>
+                        
+                        <p>虽然Paris公式具有广泛的适用性，但在以下情况下需要谨慎使用或采用修正方程:</p>
+                        <ul>
+                            <li>接近疲劳裂纹扩展阈值的低ΔK区域</li>
+                            <li>接近临界断裂韧性的高ΔK区域</li>
+                            <li>存在显著的应力比R效应时</li>
+                            <li>在腐蚀环境中</li>
+                            <li>非比例或变幅载荷情况</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div id="wheeler-formula" style="display: none;" class="formula-card">
+                    <h2 class="formula-title">Wheeler模型</h2>
+                    
+                    <div class="tabs">
+                        <div class="tab active" data-tab="wheeler-basics">基本公式</div>
+                        <div class="tab" data-tab="wheeler-principles">原理介绍</div>
+                        <div class="tab" data-tab="wheeler-author">提出者信息</div>
+                        <div class="tab" data-tab="wheeler-applications">应用范围</div>
+                    </div>
+
+                    <div id="wheeler-basics" class="tab-content active">
+                        <div class="formula-math">
+                            <p>\[ \frac{da}{dN} = C \left(\frac{\Delta K}{\sqrt{1-\phi}}\right)^m \]</p>
+                        </div>
+                        
+                        <div class="parameter-explanation">
+                            <h4>参数解释:</h4>
+                            <div class="parameter-row">
+                                <div class="parameter-symbol">φ</div>
+                                <div class="parameter-meaning">塑性区尺寸修正因子</div>
+                            </div>
+                        </div>
+                        
+                        <div class="reference">
+                            <p>参考文献: Wheeler, O. E. (1972). Spectrum loading and crack growth. Journal of Basic Engineering, 94(1), 181-186.</p>
+                        </div>
+                    </div>
+
+                    <div id="wheeler-principles" class="tab-content">
+                        <h3>Wheeler模型原理</h3>
+                        <p>该模型通过引入塑性区尺寸修正因子φ，考虑了过载引起的裂纹迟滞效应。当施加过载时，会在裂纹尖端产生较大的塑性区，延缓后续裂纹扩展。</p>
+                        
+                        <div class="figure">
+                            <img src="/api/placeholder/overload-effect.png" alt="过载迟滞效应示意图">
+                            <div class="figure-caption">图2: 过载引起的塑性区扩展和裂纹迟滞效应</div>
+                        </div>
+                    </div>
+
+                    <div id="wheeler-author" class="tab-content">
+                        <h3>提出者信息</h3>
+                        <div class="formula-details">
+                            <div class="formula-detail-row">
+                                <div class="detail-label">提出者:</div>
+                                <div class="detail-value">O. E. Wheeler</div>
+                            </div>
+                            <div class="formula-detail-row">
+                                <div class="detail-label">提出年份:</div>
+                                <div class="detail-value">1972年</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="wheeler-applications" class="tab-content">
+                        <h3>应用范围</h3>
+                        <ul>
+                            <li>飞机结构谱载荷下的裂纹扩展预测</li>
+                            <li>海洋平台随机波浪载荷分析</li>
+                            <li>存在明显过载现象的疲劳分析</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div id="walker-formula" style="display: none;" class="formula-card">
+                    <h2 class="formula-title">Walker模型</h2>
+                    <div class="tabs">
+                        <div class="tab active" data-tab="walker-basics">基本公式</div>
+                        <div class="tab" data-tab="walker-principles">原理介绍</div>
+                        <div class="tab" data-tab="walker-author">提出者信息</div>
+                        <div class="tab" data-tab="walker-applications">应用范围</div>
+                    </div>
+
+                    <div id="walker-basics" class="tab-content active">
+                        <div class="formula-math">
+                            <p>\[ \frac{da}{dN} = C \left( \frac{\Delta K}{(1-R)^{n}} \right)^m \]</p>
+                        </div>
+                        <div class="parameter-explanation">
+                            <h4>参数解释:</h4>
+                            <div class="parameter-row">
+                                <div class="parameter-symbol">n</div>
+                                <div class="parameter-meaning">应力比敏感指数</div>
+                            </div>
+                        </div>
+                        <div class="reference">
+                            <p>参考文献: Walker, K. (1970). The effect of stress ratio during crack propagation and fatigue for 2024-T3 and 7075-T6 aluminum. ASTM STP, 462, 1-14.</p>
+                        </div>
+                    </div>
+
+                    <div id="walker-principles" class="tab-content">
+                        <h3>原理介绍</h3>
+                        <p>通过引入应力比修正项(1-R)<sup>n</sup>，有效描述应力比对裂纹扩展速率的影响...</p>
+                        <div class="figure">
+                            <img src="/static/images/stress-ratio-effect.webp" alt="应力比效应示意图">
+                            <div class="figure-caption">图3: 不同应力比下的da/dN-ΔK曲线</div>
+                        </div>
+                    </div>
+
+                    <div id="walker-author" class="tab-content">
+                        <h3>提出者信息</h3>
+                        <div class="formula-details">
+                            <div class="formula-detail-row">
+                                <div class="detail-label">提出者:</div>
+                                <div class="detail-value">Kenneth Walker</div>
+                            </div>
+                            <div class="formula-detail-row">
+                                <div class="detail-label">提出年份:</div>
+                                <div class="detail-value">1970年</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="walker-applications" class="tab-content">
+                        <h3>应用范围</h3>
+                        <ul>
+                            <li>航空铝合金结构的疲劳分析</li>
+                            <li>变幅载荷下的寿命预测</li>
+                            <li>高应力比(R>0.5)工况</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div id="forman-formula" style="display: none;" class="formula-card">
+                    <h2 class="formula-title">Forman模型 (Forman方程)</h2>
+                    
+                    <div class="tabs">
+                        <div class="tab active" data-tab="forman-basics">基本公式</div>
+                        <div class="tab" data-tab="forman-principles">原理介绍</div>
+                        <div class="tab" data-tab="forman-author">提出者信息</div>
+                        <div class="tab" data-tab="forman-applications">应用范围</div>
+                    </div>
+
+                    <!-- 基本公式 Tab -->
+                    <div id="forman-basics" class="tab-content active">
+                        <div class="formula-math">
+                            <p>\[ \frac{da}{dN} = \frac{C (\Delta K)^m}{(1-R)K_c - \Delta K} \]</p>
+                        </div>
+                        
+                        <div class="parameter-explanation">
+                            <h4>参数解释:</h4>
+                            <div class="parameter-row">
+                                <div class="parameter-symbol">ΔK</div>
+                                <div class="parameter-meaning">应力强度因子幅值 (MPa√m)</div>
+                            </div>
+                            <div class="parameter-row">
+                                <div class="parameter-symbol">R</div>
+                                <div class="parameter-meaning">应力比 (K<sub>min</sub>/K<sub>max</sub>)</div>
+                            </div>
+                            <div class="parameter-row">
+                                <div class="parameter-symbol">K<sub>c</sub></div>
+                                <div class="parameter-meaning">材料断裂韧性 (MPa√m)</div>
+                            </div>
+                            <div class="parameter-row">
+                                <div class="parameter-symbol">C, m</div>
+                                <div class="parameter-meaning">材料常数</div>
+                            </div>
+                        </div>
+                        
+                        <div class="reference">
+                            <p>参考文献: Forman, R. G., et al. (1967). Numerical analysis of crack propagation in cyclic-loaded structures. Journal of Basic Engineering, 89(3), 459-464.</p>
+                        </div>
+                    </div>
+
+                    <!-- 原理介绍 Tab -->
+                    <div id="forman-principles" class="tab-content">
+                        <h3>模型原理</h3>
+                        <p>Forman模型在Paris公式基础上进行重要改进，主要特点包括：</p>
+                        <ul>
+                            <li>引入分母项 <code>(1-R)K<sub>c</sub> - ΔK</code> 描述快速扩展阶段行为</li>
+                            <li>当ΔK接近 <code>(1-R)K<sub>c</sub></code> 时，裂纹扩展速率趋向无限大</li>
+                            <li>首次同时考虑应力比R和断裂韧性K<sub>c</sub>的影响</li>
+                        </ul>
+                        
+                        <div class="figure">
+                            <img src="/static/images/k-curve.webp" alt="Forman模型K-R曲线">
+                            <div class="figure-caption">图5: Forman模型的裂纹扩展速率曲线特征</div>
+                        </div>
+                        
+                        <h4>理论突破</h4>
+                        <p>模型成功统一了三个关键区域的行为描述：</p>
+                        <ol>
+                            <li>近门槛区（ΔK接近ΔK<sub>th</sub>）</li>
+                            <li>Paris区（稳定扩展阶段）</li>
+                            <li>快速扩展区（ΔK接近K<sub>c</sub>）</li>
+                        </ol>
+                    </div>
+
+                    <!-- 提出者信息 Tab -->
+                    <div id="forman-author" class="tab-content">
+                        <h3>提出者信息</h3>
+                        <div class="formula-details">
+                            <div class="formula-detail-row">
+                                <div class="detail-label">提出者:</div>
+                                <div class="detail-value">Richard G. Forman</div>
+                            </div>
+                            <div class="formula-detail-row">
+                                <div class="detail-label">提出年份:</div>
+                                <div class="detail-value">1967年</div>
+                            </div>
+                            <div class="formula-detail-row">
+                                <div class="detail-label">研究机构:</div>
+                                <div class="detail-value">NASA Langley研究中心</div>
+                            </div>
+                        </div>
+                        
+                        <h4>学术贡献</h4>
+                        <p>Forman博士在NASA工作期间，针对航天器金属结构的疲劳问题开展研究：</p>
+                        <ul>
+                            <li>首次建立考虑断裂韧性的疲劳裂纹扩展模型</li>
+                            <li>开发了NASA/FLAGRO疲劳裂纹分析程序</li>
+                            <li>推动损伤容限设计方法在航空航天领域的应用</li>
+                        </ul>
+                    </div>
+
+                    <!-- 应用范围 Tab -->
+                    <div id="forman-applications" class="tab-content">
+                        <h3>应用范围</h3>
+                        <p>Forman模型特别适用于以下场景：</p>
+                        <ul>
+                            <li><strong>高风险结构分析</strong>
+                                <ul>
+                                    <li>压力容器</li>
+                                    <li>核反应堆冷却系统</li>
+                                    <li>飞机起落架</li>
+                                </ul>
+                            </li>
+                            <li><strong>特殊载荷工况</strong>
+                                <ul>
+                                    <li>高应力比(R > 0.8)条件</li>
+                                    <li>存在过载峰值的随机载荷</li>
+                                    <li>接近材料断裂韧性的临界状态</li>
+                                </ul>
+                            </li>
+                        </ul>
+                        
+                        <div class="figure">
+                            <img src="D:\课程\大四\大四下\自然语言处理\第五次作业\code\static\images\2023050009-5_mini.jpg" alt="航天器应用实例">
+                            <div class="figure-caption">图6: 航天器结构裂纹检测与寿命预测</div>
+                        </div>
+                        
+                        <h4>使用限制</h4>
+                        <ul>
+                            <li>不适用于超低周疲劳分析</li>
+                            <li>对纳米材料的预测精度较低</li>
+                            <li>需配合实验数据确定C、m参数</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- McEvily模型 -->
+                <div id="mcevily-formula" style="display: none;" class="formula-card">
+                    <h2 class="formula-title">McEvily模型</h2>
+                    <div class="formula-math">
+                        <p>\[ \frac{da}{dN} = C(\Delta K - \Delta K_{th})^m \]</p>
+                    </div>
+                    <div class="parameter-explanation">
+                        <div class="parameter-row">
+                            <div class="parameter-symbol">ΔK<sub>th</sub></div>
+                            <div class="parameter-meaning">疲劳裂纹扩展门槛值</div>
+                        </div>
+                    </div>
+                    <div class="figure">
+                        <img src="/static/images/threshold-effect.webp" alt="门槛值效应示意图">
+                        <div class="figure-caption">图4: 裂纹扩展门槛值示意</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>© 2025 疲劳裂纹扩展公式查询系统 | 材料科学与工程数据库</p>
+    </footer>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab切换功能
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // 移除所有tab的active类
+                    tabs.forEach(t => t.classList.remove('active'));
+                    // 给当前点击的tab添加active类
+                    this.classList.add('active');
+                    
+                    // 隐藏所有tab内容
+                    const tabContents = document.querySelectorAll('.tab-content');
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    
+                    // 显示当前tab对应的内容
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+            
+            // 公式列表点击功能
+            const formulaItems = document.querySelectorAll('.formula-list li');
+            formulaItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    // 移除所有列表项的active类
+                    formulaItems.forEach(i => i.classList.remove('active'));
+                    // 给当前点击的列表项添加active类
+                    this.classList.add('active');
+                    
+                    // 隐藏所有公式卡片
+                    const formulaCards = document.querySelectorAll('.formula-card');
+                    formulaCards.forEach(card => card.style.display = 'none');
+                    
+                    // 显示当前选中的公式卡片
+                    const formulaId = this.getAttribute('data-formula');
+                    const formulaCard = document.getElementById(formulaId + '-formula');
+                    if (formulaCard) {
+                        formulaCard.style.display = 'block';
+                    } else {
+                        // 如果公式卡片不存在，显示提示信息
+                        document.querySelector('.content-area').innerHTML = `
+                            <div class="formula-card">
+                                <h2 class="formula-title">${formulaId}公式</h2>
+                                <p>该公式的详细内容正在更新中，请稍后查看。</p>
+                            </div>
+                        `;
+                    }
+                });
+            });
+            
+            // 搜索功能
+            const searchButton = document.getElementById('search-button');
+            const searchInput = document.getElementById('search-input');
+            
+            searchButton.addEventListener('click', function() {
+                const searchTerm = searchInput.value.toLowerCase();
+                if (searchTerm) {
+                    // 简单的搜索逻辑
+                    const formulaItems = document.querySelectorAll('.formula-list li');
+                    let found = false;
+                    
+                    formulaItems.forEach(item => {
+                        const formulaName = item.textContent.toLowerCase();
+                        if (formulaName.includes(searchTerm)) {
+                            // 触发点击事件
+                            item.click();
+                            found = true;
+                        }
+                    });
+                    
+                    if (!found) {
+                        alert('未找到匹配的公式，请尝试其他关键词。');
+                    }
+                }
+            });
+            
+            // 添加回车键搜索功能
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchButton.click();
+                }
+            });
+        });
+    </script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</body>
+</html>

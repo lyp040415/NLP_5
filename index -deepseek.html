@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FCPMDB | 疲劳裂纹扩展模型数据库</title>
+    
+    <!-- 核心样式 -->
+    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- 自定义样式 -->
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+        }
+        
+        .formula-card {
+            background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .formula-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .model-graph {
+            height: 400px;
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .parameter-table th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .model-graph {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg bg-body-tertiary shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-crack"></i>
+                FCPMDB
+            </a>
+            <div class="d-flex">
+                <button class="btn btn-outline-secondary" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <div class="container mt-4">
+        <div class="row g-4">
+            <!-- 侧边导航 -->
+            <div class="col-lg-3">
+                <div class="sticky-top" style="top: 20px;">
+                    <div class="list-group">
+                        <a class="list-group-item list-group-item-action active" data-model="paris">
+                            <i class="fas fa-wave-square me-2"></i>
+                            Paris模型
+                        </a>
+                        <a class="list-group-item list-group-item-action" data-model="wheeler">
+                            <i class="fas fa-layer-group me-2"></i>
+                            Wheeler模型
+                        </a>
+                        <a class="list-group-item list-group-item-action" data-model="forman">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Forman模型
+                        </a>
+                    </div>
+                    
+                    <!-- 模型比较控件 -->
+                    <div class="mt-3 p-3 border rounded">
+                        <h6>模型比较</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="compareParis">
+                            <label class="form-check-label" for="compareParis">Paris</label>
+                        </div>
+                        <!-- 其他模型复选框... -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 内容展示区 -->
+            <div class="col-lg-9">
+                <div class="card formula-card">
+                    <div class="card-body">
+                        <!-- 动态内容将通过JS加载 -->
+                        <div id="modelDetail"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 脚本依赖 -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <!-- 应用脚本 -->
+    <script>
+        // 模型数据存储
+        const modelDatabase = {
+            paris: {
+                meta: {
+                    name: "Paris-Erdogan 模型",
+                    year: 1963,
+                    authors: [
+                        {name: "Paul C. Paris", affiliation: "Lehigh University"},
+                        {name: "Fazil Erdogan", affiliation: "University of Pennsylvania"}
+                    ],
+                    references: [
+                        "Paris, P., & Erdogan, F. (1963). A critical analysis of crack propagation laws. Journal of basic engineering, 85(4), 528-534."
+                    ]
+                },
+                formula: {
+                    main: "\\frac{da}{dN} = C(\\Delta K)^m",
+                    parameters: [
+                        {symbol: "C", unit: "MPa^{-m}√m^{m/2}", description: "材料常数"},
+                        {symbol: "m", unit: "-", description: "材料指数"},
+                        {symbol: "\\Delta K", unit: "MPa√m", description: "应力强度因子幅值"}
+                    ],
+                    range: "适用于稳态裂纹扩展阶段（II区）"
+                },
+                visualization: {
+                    chartConfig: {/* 详细图表配置 */},
+                    diagram: "paris_model.svg"
+                },
+                caseStudies: [
+                    {
+                        material: "7075-T6 Aluminum",
+                        data: {
+                            C: 2.3e-12,
+                            m: 3.2,
+                            ΔK_th: 5.0
+                        }
+                    }
+                ]
+            },
+            // 其他模型数据...
+        };
+
+        // 图表渲染引擎
+        class ModelVisualizer {
+            constructor(canvasId, config) {
+                this.ctx = document.getElementById(canvasId).getContext('2d');
+                this.chart = new Chart(this.ctx, {
+                    type: 'scatter',
+                    data: {
+                        datasets: []
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: {
+                                type: 'logarithmic',
+                                title: {display: true, text: 'ΔK (MPa√m)'}
+                            },
+                            y: {
+                                type: 'logarithmic',
+                                title: {display: true, text: 'da/dN (m/cycle)'}
+                            }
+                        },
+                        plugins: {
+                            zoom: {
+                                zoom: {
+                                    wheel: {enabled: true},
+                                    pinch: {enabled: true},
+                                    mode: 'xy'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            updateData(modelData) {
+                // 数据更新逻辑
+            }
+        }
+
+        // 动态内容渲染器
+        class ContentRenderer {
+            static renderModel(modelId) {
+                const model = modelDatabase[modelId];
+                const html = `
+                    <div class="model-header mb-4">
+                        <h2>${model.meta.name}</h2>
+                        <div class="text-muted">
+                            <span>提出年份：${model.meta.year}</span>
+                            <span class="mx-2">|</span>
+                            <span>提出者：${model.meta.authors.map(a => a.name).join(', ')}</span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-4">
+                                <div class="card-header">基本公式</div>
+                                <div class="card-body">
+                                    <div class="math-display">$${model.formula.main}$</div>
+                                    
+                                    <h5 class="mt-3">参数说明</h5>
+                                    <table class="table parameter-table">
+                                        <thead>
+                                            <tr>
+                                                <th>符号</th>
+                                                <th>单位</th>
+                                                <th>描述</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${model.formula.parameters.map(p => `
+                                                <tr>
+                                                    <td>${p.symbol}</td>
+                                                    <td>${p.unit}</td>
+                                                    <td>${p.description}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">动态特性曲线</div>
+                                <div class="card-body">
+                                    <canvas id="dynamicChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">原理示意图</div>
+                                <div class="card-body text-center">
+                                    <img src="${model.visualization.diagram}" 
+                                         class="img-fluid" 
+                                         alt="${model.meta.name}原理图"
+                                         style="max-height: 400px">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('modelDetail').innerHTML = html;
+                new ModelVisualizer('dynamicChart', model.visualization.chartConfig);
+                MathJax.typeset();
+            }
+        }
+
+        // 事件监听
+        document.querySelectorAll('[data-model]').forEach(item => {
+            item.addEventListener('click', event => {
+                const modelId = event.currentTarget.dataset.model;
+                ContentRenderer.renderModel(modelId);
+            });
+        });
+
+        // 初始化加载
+        ContentRenderer.renderModel('paris');
+    </script>
+</body>
+</html>
